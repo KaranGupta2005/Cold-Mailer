@@ -1,0 +1,8 @@
+{
+  "emailListFile": "emails.txt",
+  "subject": "Your Email Subject Here",
+  "batchSize": 50,
+  "batchDelay": 120000,
+  "emailDelay": 1000,
+  "attachments": []
+}

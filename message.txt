@@ -1,0 +1,8 @@
+Dear Recipient,
+
+This is your custom email message. Edit this file to change the content.
+
+You can add multiple paragraphs and format your message as needed.
+
+Best regards,
+Your Name
