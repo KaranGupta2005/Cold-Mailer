@@ -184,8 +184,27 @@ app.post("/api/send-emails", async (req, res) => {
     attachmentPaths 
   } = req.body;
 
+  console.log('\n📧 New campaign request received');
+  console.log(`   Sender: ${senderName}`);
+  console.log(`   Subject: ${subject}`);
+  console.log(`   Email User: ${EMAIL_USER}`);
+  console.log(`   Email Pass Set: ${EMAIL_PASS ? 'Yes' : 'No'}`);
+
   try {
     const transporter = createTransporter();
+    
+    // Verify transporter before sending
+    try {
+      await transporter.verify();
+      console.log('✅ Transporter verified successfully');
+    } catch (verifyError) {
+      console.error('❌ Transporter verification failed:', verifyError);
+      return res.status(500).json({ 
+        success: false, 
+        error: `Email configuration error: ${verifyError.message}` 
+      });
+    }
+    
     const emails = parseEmailList(emailList);
 
     if (emails.length === 0) {
@@ -263,9 +282,12 @@ app.post("/api/send-emails", async (req, res) => {
           console.log(`   - ${email}: ${error}`);
         });
       }
-    })();
+    })().catch(error => {
+      console.error('❌ Campaign error:', error);
+    });
 
   } catch (error) {
+    console.error('❌ Send emails error:', error);
     res.status(500).json({ success: false, error: error.message });
   }
 });
@@ -299,5 +321,16 @@ app.listen(PORT, () => {
   console.log(`\n🚀 Mass Mailer Pro Server`);
   console.log(`   Port: ${PORT}`);
   console.log(`   Email: ${EMAIL_USER}`);
+  console.log(`   Email Pass Length: ${EMAIL_PASS ? EMAIL_PASS.length : 0}`);
   console.log(`   Status: Ready\n`);
+  
+  // Test email configuration on startup
+  const transporter = createTransporter();
+  transporter.verify((error, success) => {
+    if (error) {
+      console.error('❌ Email configuration error:', error);
+    } else {
+      console.log('✅ Email server is ready to send messages');
+    }
+  });
 });
