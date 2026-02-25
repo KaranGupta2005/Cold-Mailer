@@ -47,11 +47,18 @@ const upload = multer({
 // Create email transporter
 function createTransporter() {
   return nodemailer.createTransport({
-    service: "gmail",
+    host: "smtp.gmail.com",
+    port: 587,
+    secure: false, // Use STARTTLS
     auth: {
       user: EMAIL_USER,
       pass: EMAIL_PASS,
     },
+    tls: {
+      rejectUnauthorized: false
+    },
+    // Force IPv4
+    family: 4
   });
 }
 
