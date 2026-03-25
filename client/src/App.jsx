@@ -64,6 +64,27 @@ function App() {
     setAttachments(prev => prev.filter((_, i) => i !== index));
   };
 
+  const insertFormat = (type) => {
+    const textarea = document.getElementById('message-area');
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    const selected = formData.message.substring(start, end);
+    let replacement = '';
+
+    if (type === 'bold') replacement = `**${selected || 'bold text'}**`;
+    else if (type === 'italic') replacement = `*${selected || 'italic text'}*`;
+    else if (type === 'list') replacement = `\n- ${selected || 'List item 1'}\n- List item 2\n- List item 3\n`;
+    else if (type === 'link') replacement = `[${selected || 'link text'}](https://example.com)`;
+
+    const newMessage = formData.message.substring(0, start) + replacement + formData.message.substring(end);
+    setFormData(prev => ({ ...prev, message: newMessage }));
+    setTimeout(() => {
+      textarea.focus();
+      textarea.selectionStart = start + replacement.length;
+      textarea.selectionEnd = start + replacement.length;
+    }, 0);
+  };
+
   const uploadFiles = async () => {
     if (attachments.length === 0) return [];
     const fd = new FormData();
@@ -186,8 +207,22 @@ function App() {
 
             <div className="form-group">
               <label>Message <span className="required">*</span></label>
-              <textarea name="message" value={formData.message} onChange={handleChange} placeholder="Write your email message here..." rows="10" required />
-              <small>Separate paragraphs with blank lines. Use [text](url) for links. Use | pipes for tables.</small>
+              <div className="toolbar">
+                <button type="button" className="toolbar-btn" title="Bold" onClick={() => insertFormat('bold')}><b>B</b></button>
+                <button type="button" className="toolbar-btn" title="Italic" onClick={() => insertFormat('italic')}><i>I</i></button>
+                <button type="button" className="toolbar-btn" title="Bullet List" onClick={() => insertFormat('list')}>&#8226; List</button>
+                <button type="button" className="toolbar-btn" title="Link" onClick={() => insertFormat('link')}>Link</button>
+                <span className="toolbar-hint">**bold** | *italic* | - bullet | [text](url) | pipes for tables</span>
+              </div>
+              <textarea
+                id="message-area"
+                name="message"
+                value={formData.message}
+                onChange={handleChange}
+                placeholder="Write your email message here..."
+                rows="12"
+                required
+              />
             </div>
           </div>
 

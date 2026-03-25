@@ -89,6 +89,15 @@ function getEmailHTML(messageContent, senderName, logoUrl, footer, dtuLogoCid) {
   
   // Convert *italic* to <em>
   htmlContent = htmlContent.replace(/\*([^*]+)\*/g, '<em>$1</em>');
+
+  // Convert bullet lists (lines starting with - or *)
+  htmlContent = htmlContent.replace(/((?:^[ \t]*[-•][ \t].+\n?)+)/gm, (match) => {
+    const items = match.trim().split('\n').map(line => {
+      const text = line.replace(/^[ \t]*[-•][ \t]/, '').trim();
+      return `<li style="margin-bottom: 6px; color: #555; font-size: 14px; line-height: 1.7;">${text}</li>`;
+    }).join('');
+    return `\n\nLIST_PLACEHOLDER_START${items}LIST_PLACEHOLDER_END\n\n`;
+  });
   
   const sections = htmlContent.split('\n\n');
   let formattedContent = '';
@@ -96,6 +105,13 @@ function getEmailHTML(messageContent, senderName, logoUrl, footer, dtuLogoCid) {
   sections.forEach(section => {
     const trimmedSection = section.trim();
     if (!trimmedSection) return;
+
+    // Render bullet list
+    if (trimmedSection.startsWith('LIST_PLACEHOLDER_START')) {
+      const items = trimmedSection.replace('LIST_PLACEHOLDER_START', '').replace('LIST_PLACEHOLDER_END', '');
+      formattedContent += `<ul style="margin: 10px 0 20px 0; padding-left: 25px;">${items}</ul>`;
+      return;
+    }
     
     const lines = trimmedSection.split('\n');
     if (lines.length > 2 && lines[0].includes('|') && lines[1].includes('|')) {
