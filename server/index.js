@@ -17,8 +17,8 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 
 // Hardcoded credentials
-const EMAIL_USER = 'guptakaran.port@gmail.com';
-const EMAIL_PASS = 'lrzezfqowhfshsuv';
+const EMAIL_USER = process.env.EMAIL_USER;
+const EMAIL_PASS = process.env.EMAIL_PASS;
 
 // Middleware
 app.use(cors());
