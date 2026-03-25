@@ -94,7 +94,7 @@ function noHeaderFooter(footer, dtuLogoCid) {
         <td style="border: none !important; padding: 0 20px 0 0; vertical-align: middle;">
           ${dtuImg}
         </td>
-        <td style="border: none !important; border-left: 2px solid #e2e8f0 !important; padding: 0 0 0 20px; vertical-align: middle;">
+        <td style="border: none !important; padding-left: 20px; vertical-align: middle;">
           <div style="font-size: 14px; font-weight: 700; color: #1a202c; margin-bottom: 2px;">${footer.name || ''}</div>
           <div style="font-size: 13px; color: #555; margin-bottom: 1px;">${footer.title || ''}</div>
           <div style="font-size: 12px; color: #888; margin-bottom: 1px;">${footer.batch || ''}</div>
