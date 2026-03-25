@@ -7,7 +7,7 @@ function App() {
     subject: '',
     message: '',
     emailList: '',
-    logoUrl: '',
+    logoUrl: `${window.location.origin}/uploads/vihaan-logo.png`,
     batchSize: 50,
     batchDelay: 120000,
     emailDelay: 1000
@@ -121,7 +121,7 @@ function App() {
             subject: '',
             message: '',
             emailList: '',
-            logoUrl: '',
+            logoUrl: `${window.location.origin}/uploads/vihaan-logo.png`,
             batchSize: 50,
             batchDelay: 120000,
             emailDelay: 1000
@@ -192,7 +192,7 @@ function App() {
                 onChange={handleChange}
                 placeholder="https://example.com/your-logo.png"
               />
-              <small>Upload your image to <a href="https://imgur.com/upload" target="_blank" rel="noreferrer">imgur.com</a> or <a href="https://postimages.org" target="_blank" rel="noreferrer">postimages.org</a> and paste the direct image URL here</small>
+              <small>Upload your image to <a href="https://imgur.com/upload" target="_blank" rel="noreferrer">imgur.com</a> or <a href="https://postimages.org" target="_blank" rel="noreferrer">postimages.org</a> and paste the direct image URL here. Or leave empty for default blue header.</small>
             </div>
 
             <div className="form-group">

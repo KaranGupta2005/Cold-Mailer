@@ -349,6 +349,9 @@ app.get("/api/health", (req, res) => {
   res.json({ status: "ok", email: EMAIL_USER });
 });
 
+// Serve uploaded files statically
+app.use('/uploads', express.static(path.join(__dirname, "uploads")));
+
 // Serve React app
 app.get("*", (req, res) => {
   const indexPath = path.join(__dirname, "../client/dist/index.html");
