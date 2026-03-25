@@ -79,8 +79,29 @@ function parseEmailList(emailText) {
   return emails.filter(email => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email));
 }
 
+// Plain left-aligned signature for no-header emails
+function noHeaderFooter(footer, dtuLogoCid) {
+  if (!footer || (!footer.name && !footer.title && !footer.mobile && !footer.email)) return '';
+
+  const dtuImg = dtuLogoCid
+    ? `<img src="${dtuLogoCid}" alt="DTU" style="width: 130px; height: auto; display: block; margin-bottom: 8px;" />`
+    : '';
+
+  return `
+  <div style="margin-top: 25px; padding-top: 15px; border-top: 1px solid #e2e8f0; text-align: left; font-family: Arial, sans-serif;">
+    ${dtuImg}
+    <div style="font-size: 14px; font-weight: 700; color: #1a202c; margin-bottom: 2px;">${footer.name || ''}</div>
+    <div style="font-size: 13px; color: #555; margin-bottom: 1px;">${footer.title || ''}</div>
+    <div style="font-size: 12px; color: #888; margin-bottom: 1px;">${footer.batch || ''}</div>
+    <div style="font-size: 12px; color: #888; margin-bottom: 6px;">${footer.university || ''}</div>
+    ${footer.mobile ? `<div style="font-size: 13px; color: #333; margin-bottom: 2px;"><strong>Mobile:</strong> <a href="tel:${footer.mobile}" style="color: #0066cc; text-decoration: none;">${footer.mobile}</a></div>` : ''}
+    ${footer.email ? `<div style="font-size: 13px; color: #333; margin-bottom: 8px;"><strong>Email:</strong> <a href="mailto:${footer.email}" style="color: #0066cc; text-decoration: none;">${footer.email}</a></div>` : ''}
+    ${footer.linkedin ? `<a href="${footer.linkedin}" style="display: inline-block; width: 26px; height: 26px; background-color: #0077b5; border-radius: 50%; text-align: center; line-height: 26px; color: white; font-size: 13px; font-weight: 700; text-decoration: none;">in</a>` : ''}
+  </div>`;
+}
+
 // Generate HTML email template
-function getEmailHTML(messageContent, senderName, logoUrl, footer, dtuLogoCid) {
+function getEmailHTML(messageContent, senderName, logoUrl, footer, dtuLogoCid, noHeader) {
   // Convert markdown-style links [text](url) to HTML links
   let htmlContent = messageContent.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" style="color: #0066cc; text-decoration: none; font-weight: 500;">$1</a>');
   
@@ -144,14 +165,17 @@ function getEmailHTML(messageContent, senderName, logoUrl, footer, dtuLogoCid) {
     }
   });
 
-  // Build header: logo image if provided, else colored bar with sender name
-  const headerHTML = logoUrl
-    ? `<div style="background-color: #f9a800; text-align: center; padding: 0; line-height: 0;">
-        <img src="${logoUrl}" alt="${senderName}" style="width: 100%; max-width: 700px; height: auto; display: block; margin: 0 auto;" />
-       </div>`
-    : `<div style="background-color: #0066cc; color: white; padding: 30px 25px; text-align: center;">
-        <h2 style="margin: 0; font-size: 22px; font-weight: 700; letter-spacing: 0.5px;">${senderName}</h2>
-       </div>`;
+  // Build header
+  let headerHTML = '';
+  if (!noHeader) {
+    headerHTML = logoUrl
+      ? `<div style="background-color: #ffffff; text-align: center; padding: 0; line-height: 0;">
+          <img src="${logoUrl}" alt="${senderName}" style="width: 100%; max-width: 700px; height: auto; display: block; margin: 0 auto;" />
+         </div>`
+      : `<div style="background-color: #0066cc; color: white; padding: 30px 25px; text-align: center;">
+          <h2 style="margin: 0; font-size: 22px; font-weight: 700; letter-spacing: 0.5px;">${senderName}</h2>
+         </div>`;
+  }
 
   // Build footer HTML
   let footerHTML = '';
@@ -160,11 +184,14 @@ function getEmailHTML(messageContent, senderName, logoUrl, footer, dtuLogoCid) {
       ? `<img src="${dtuLogoCid}" alt="DTU" style="width: 160px; height: auto; display: block;" />`
       : '';
 
+    const borderStyle = noHeader ? 'border-top: 1px solid #e2e8f0;' : 'border-top: 2px solid #e2e8f0;';
+    const padding = noHeader ? 'padding: 20px 0;' : 'padding: 20px 25px;';
+
     footerHTML = `
-    <div style="border-top: 2px solid #e2e8f0; margin-top: 30px; padding: 20px 25px;">
+    <div style="${borderStyle} margin-top: 30px; ${padding}">
       <table style="width: 100%; border: none; border-collapse: collapse; margin: 0;">
         <tr>
-          <td style="width: 180px; vertical-align: middle; padding: 0 20px 0 0; border: none; text-align: center;">
+          <td style="width: 180px; vertical-align: middle; padding: 0 20px 0 0; border: none; text-align: left;">
             ${dtuImg}
           </td>
           <td style="vertical-align: middle; border-left: 2px solid #e2e8f0; padding-left: 20px; border-top: none; border-right: none; border-bottom: none;">
@@ -187,23 +214,23 @@ function getEmailHTML(messageContent, senderName, logoUrl, footer, dtuLogoCid) {
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
-    body { font-family: Arial, 'Helvetica Neue', Helvetica, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; background-color: #f4f4f4; }
-    .container { max-width: 700px; margin: 20px auto; background-color: white; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
-    .content { padding: 30px 25px; background-color: #ffffff; }
-    .content p { margin: 0 0 15px 0; color: #555; line-height: 1.8; font-size: 14px; }
-    .content a { color: #0066cc; text-decoration: none; font-weight: 500; }
+    body { font-family: Arial, 'Helvetica Neue', Helvetica, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; background-color: #ffffff; }
+    .container { max-width: ${noHeader ? '100%' : '700px'}; margin: 0; background-color: #ffffff; padding: ${noHeader ? '0' : '0'}; }
+    .content { padding: ${noHeader ? '0' : '30px 25px'}; background-color: #ffffff; }
+    .content p { margin: 0 0 14px 0; color: #333; line-height: 1.7; font-size: 14px; text-align: left; }
+    .content a { color: #0066cc; text-decoration: none; }
     .content a:hover { text-decoration: underline; }
     table { width: 100%; border-collapse: collapse; margin: 20px 0; background: white; border: 1px solid #ddd; }
     th { background-color: #0066cc; color: white; padding: 14px 16px; text-align: left; border: 1px solid #0066cc; font-weight: 600; font-size: 14px; }
     td { padding: 12px 16px; border: 1px solid #e0e0e0; color: #555; font-size: 14px; line-height: 1.6; }
     tr:nth-child(even) { background-color: #f9f9f9; }
-    tr:hover { background-color: #f0f7ff; }
-    h3 { color: #0066cc; margin: 25px 0 15px 0; font-size: 18px; font-weight: 700; }
-    h4 { color: #333; margin: 20px 0 10px 0; font-size: 16px; font-weight: 600; }
+    h3 { color: ${noHeader ? '#333' : '#0066cc'}; margin: 20px 0 10px 0; font-size: 15px; font-weight: 700; text-align: left; }
+    h4 { color: #333; margin: 16px 0 8px 0; font-size: 14px; font-weight: 700; text-align: left; }
     strong { color: #333; font-weight: 700; }
+    ul { margin: 8px 0 16px 0; padding-left: 22px; text-align: left; }
+    li { margin-bottom: 5px; color: #333; font-size: 14px; line-height: 1.7; }
     @media only screen and (max-width: 600px) {
-      .container { width: 100% !important; margin: 0 !important; }
-      .content { padding: 20px 15px !important; }
+      .container { width: 100% !important; }
       table { font-size: 12px; }
       th, td { padding: 10px 8px !important; }
     }
@@ -211,18 +238,18 @@ function getEmailHTML(messageContent, senderName, logoUrl, footer, dtuLogoCid) {
 </head>
 <body>
   <div class="container">
-    ${headerHTML}
+    ${noHeader ? '' : headerHTML}
     <div class="content">
       ${formattedContent}
     </div>
-    ${footerHTML}
+    ${noHeader ? noHeaderFooter(footer, dtuLogoCid) : footerHTML}
   </div>
 </body>
 </html>`;
 }
 
 // Send single email
-async function sendEmail(transporter, recipientEmail, subject, message, senderName, attachments, logoUrl, footer) {
+async function sendEmail(transporter, recipientEmail, subject, message, senderName, attachments, logoUrl, footer, noHeader) {
 
   // Inline header image
   let inlineAttachments = [];
@@ -249,7 +276,7 @@ async function sendEmail(transporter, recipientEmail, subject, message, senderNa
     to: recipientEmail,
     subject: subject,
     text: message,
-    html: getEmailHTML(message, senderName, headerCid || logoUrl || null, footer, dtuLogoCid),
+    html: getEmailHTML(message, senderName, headerCid || logoUrl || null, footer, dtuLogoCid, noHeader),
     attachments: [...inlineAttachments, ...attachments]
   };
 
@@ -307,11 +334,14 @@ app.post("/api/send-emails", async (req, res) => {
     footer
   } = req.body;
 
+  const noHeader = req.body.noHeader === true || req.body.noHeader === 'true';
+
   console.log('\n📧 New campaign request received');
   console.log(`   Sender: ${senderName}`);
   console.log(`   Subject: ${subject}`);
   console.log(`   Email User: ${EMAIL_USER}`);
   console.log(`   Email Pass Set: ${EMAIL_PASS ? 'Yes' : 'No'}`);
+  console.log(`   No Header: ${noHeader}`);
 
   try {
     const transporter = createTransporter();
@@ -374,7 +404,8 @@ app.post("/api/send-emails", async (req, res) => {
             senderName,
             attachments,
             logoUrl,
-            footer
+            footer,
+            noHeader
           );
 
           if (result.success) {

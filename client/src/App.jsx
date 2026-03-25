@@ -8,6 +8,7 @@ function App() {
     message: '',
     emailList: '',
     logoUrl: '',
+    noHeader: false,
     batchSize: 50,
     batchDelay: 120000,
     emailDelay: 1000
@@ -32,8 +33,8 @@ function App() {
   const [emailCount, setEmailCount] = useState(0);
 
   const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    const { name, value, type, checked } = e.target;
+    setFormData(prev => ({ ...prev, [name]: type === 'checkbox' ? checked : value }));
     if (name === 'emailList') {
       setEmailCount(value.split(/[\n,]/).filter(e => e.trim()).length);
     }
@@ -189,7 +190,9 @@ function App() {
 
             <div className="form-group">
               <label>Header Image <span style={{ color: '#718096', fontWeight: 400 }}>(optional)</span></label>
-              {headerPreview ? (
+              {formData.noHeader ? (
+                <div className="no-header-notice">No header — email will appear as a plain message</div>
+              ) : headerPreview ? (
                 <div className="header-preview">
                   <img src={headerPreview} alt="Header preview" />
                   <button type="button" className="remove-btn" onClick={removeHeaderImage}>Remove</button>
@@ -203,6 +206,15 @@ function App() {
                   <small>PNG, JPG, GIF — will appear full-width at the top of every email</small>
                 </>
               )}
+              <label className="toggle-label">
+                <input
+                  type="checkbox"
+                  name="noHeader"
+                  checked={formData.noHeader}
+                  onChange={handleChange}
+                />
+                <span className="toggle-text">No header — send as plain email</span>
+              </label>
             </div>
 
             <div className="form-group">
