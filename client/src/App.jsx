@@ -7,13 +7,15 @@ function App() {
     subject: '',
     message: '',
     emailList: '',
-    logoUrl: `${window.location.origin}/uploads/vihaan-logo.png`,
+    logoUrl: '',
     batchSize: 50,
     batchDelay: 120000,
     emailDelay: 1000
   });
 
   const [attachments, setAttachments] = useState([]);
+  const [headerImage, setHeaderImage] = useState(null);
+  const [headerPreview, setHeaderPreview] = useState(null);
   const [uploadedFiles, setUploadedFiles] = useState([]);
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState({ type: '', message: '' });
@@ -35,6 +37,19 @@ function App() {
   const handleFileChange = (e) => {
     const files = Array.from(e.target.files);
     setAttachments(files);
+  };
+
+  const handleHeaderImageChange = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    setHeaderImage(file);
+    setHeaderPreview(URL.createObjectURL(file));
+  };
+
+  const removeHeaderImage = () => {
+    setHeaderImage(null);
+    setHeaderPreview(null);
+    setFormData(prev => ({ ...prev, logoUrl: '' }));
   };
 
   const removeAttachment = (index) => {
@@ -94,6 +109,16 @@ function App() {
     setStatus({ type: 'info', message: 'Uploading attachments...' });
 
     try {
+      // Upload header image first if provided
+      let logoUrl = formData.logoUrl;
+      if (headerImage) {
+        const headerForm = new FormData();
+        headerForm.append('headerImage', headerImage);
+        const headerRes = await fetch('/api/upload-header', { method: 'POST', body: headerForm });
+        const headerData = await headerRes.json();
+        if (headerData.success) logoUrl = headerData.serverPath;
+      }
+
       const attachmentPaths = await uploadFiles();
 
       setStatus({ type: 'info', message: 'Starting email campaign...' });
@@ -103,6 +128,7 @@ function App() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...formData,
+          logoUrl,
           attachmentPaths
         })
       });
@@ -121,12 +147,14 @@ function App() {
             subject: '',
             message: '',
             emailList: '',
-            logoUrl: `${window.location.origin}/uploads/vihaan-logo.png`,
+            logoUrl: '',
             batchSize: 50,
             batchDelay: 120000,
             emailDelay: 1000
           });
           setAttachments([]);
+          setHeaderImage(null);
+          setHeaderPreview(null);
           setEmailCount(0);
         }, 3000);
       } else {
@@ -184,15 +212,27 @@ function App() {
             </div>
 
             <div className="form-group">
-              <label>Header Logo URL <span style={{color:'#718096', fontWeight:400}}>(optional — replaces the blue header with your image)</span></label>
-              <input
-                type="url"
-                name="logoUrl"
-                value={formData.logoUrl}
-                onChange={handleChange}
-                placeholder="https://example.com/your-logo.png"
-              />
-              <small>Upload your image to <a href="https://imgur.com/upload" target="_blank" rel="noreferrer">imgur.com</a> or <a href="https://postimages.org" target="_blank" rel="noreferrer">postimages.org</a> and paste the direct image URL here. Or leave empty for default blue header.</small>
+              <label>Header Image <span style={{color:'#718096', fontWeight:400}}>(optional)</span></label>
+              {headerPreview ? (
+                <div className="header-preview">
+                  <img src={headerPreview} alt="Header preview" />
+                  <button type="button" className="remove-btn" onClick={removeHeaderImage}>Remove</button>
+                </div>
+              ) : (
+                <>
+                  <label htmlFor="header-upload" className="file-upload-label">
+                    Upload Header Image
+                    <input
+                      id="header-upload"
+                      type="file"
+                      onChange={handleHeaderImageChange}
+                      accept=".jpg,.jpeg,.png,.gif,.webp"
+                      style={{ display: 'none' }}
+                    />
+                  </label>
+                  <small>PNG, JPG, GIF — will appear full-width at the top of every email</small>
+                </>
+              )}
             </div>
 
             <div className="form-group">

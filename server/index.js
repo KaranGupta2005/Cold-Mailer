@@ -179,22 +179,29 @@ function getEmailHTML(messageContent, senderName, logoUrl) {
 // Send single email
 async function sendEmail(transporter, recipientEmail, subject, message, senderName, attachments, logoUrl) {
 
-  // Build inline logo attachment if logo file exists locally
-  const logoPath = path.join(__dirname, "uploads", "vihaan-logo.png");
-  const hasLogo = fs.existsSync(logoPath);
+  // Check if a header image was uploaded (first attachment marked as header)
+  let inlineAttachments = [];
+  let headerCid = null;
 
-  const inlineAttachments = hasLogo ? [{
-    filename: "vihaan-logo.png",
-    path: logoPath,
-    cid: "vihaan-logo"   // referenced as cid:vihaan-logo in HTML
-  }] : [];
+  if (logoUrl && logoUrl.startsWith('/uploads/')) {
+    const logoPath = path.join(__dirname, logoUrl.replace('/uploads/', 'uploads/'));
+    if (fs.existsSync(logoPath)) {
+      const ext = path.extname(logoPath).replace('.', '');
+      inlineAttachments = [{
+        filename: path.basename(logoPath),
+        path: logoPath,
+        cid: "header-image"
+      }];
+      headerCid = "cid:header-image";
+    }
+  }
 
   const mailOptions = {
     from: `"${senderName}" <${EMAIL_USER}>`,
     to: recipientEmail,
     subject: subject,
     text: message,
-    html: getEmailHTML(message, senderName, hasLogo ? "cid:vihaan-logo" : null),
+    html: getEmailHTML(message, senderName, headerCid || logoUrl || null),
     attachments: [...inlineAttachments, ...attachments]
   };
 
@@ -215,9 +222,24 @@ app.post("/api/upload", upload.array("attachments", 10), (req, res) => {
     const files = req.files.map(file => ({
       filename: file.originalname,
       path: file.path,
+      serverPath: `/uploads/${file.filename}`,
       size: file.size
     }));
     res.json({ success: true, files });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// Upload header image
+app.post("/api/upload-header", upload.single("headerImage"), (req, res) => {
+  try {
+    if (!req.file) return res.status(400).json({ success: false, error: "No file uploaded" });
+    res.json({ 
+      success: true, 
+      serverPath: `/uploads/${req.file.filename}`,
+      filename: req.file.originalname
+    });
   } catch (error) {
     res.status(500).json({ success: false, error: error.message });
   }

@@ -461,3 +461,26 @@ html {
   outline: 3px solid #667eea;
   outline-offset: 2px;
 }
+
+/* Header image preview */
+.header-preview {
+  position: relative;
+  border-radius: 10px;
+  overflow: hidden;
+  border: 2px solid #e2e8f0;
+}
+
+.header-preview img {
+  width: 100%;
+  display: block;
+  max-height: 200px;
+  object-fit: cover;
+}
+
+.header-preview .remove-btn {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  padding: 6px 14px;
+  border-radius: 6px;
+}
