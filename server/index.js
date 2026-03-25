@@ -130,8 +130,8 @@ function getEmailHTML(messageContent, senderName, logoUrl) {
 
   // Build header: logo image if provided, else colored bar with sender name
   const headerHTML = logoUrl
-    ? `<div style="background-color: #f9a800; text-align: center; padding: 0;">
-        <img src="${logoUrl}" alt="${senderName}" style="width: 100%; max-width: 700px; display: block; margin: 0 auto;" />
+    ? `<div style="background-color: #f9a800; text-align: center; padding: 0; line-height: 0;">
+        <img src="${logoUrl}" alt="${senderName}" style="width: 100%; max-width: 700px; height: auto; display: block; margin: 0 auto;" />
        </div>`
     : `<div style="background-color: #0066cc; color: white; padding: 30px 25px; text-align: center;">
         <h2 style="margin: 0; font-size: 22px; font-weight: 700; letter-spacing: 0.5px;">${senderName}</h2>
@@ -178,13 +178,24 @@ function getEmailHTML(messageContent, senderName, logoUrl) {
 
 // Send single email
 async function sendEmail(transporter, recipientEmail, subject, message, senderName, attachments, logoUrl) {
+
+  // Build inline logo attachment if logo file exists locally
+  const logoPath = path.join(__dirname, "uploads", "vihaan-logo.png");
+  const hasLogo = fs.existsSync(logoPath);
+
+  const inlineAttachments = hasLogo ? [{
+    filename: "vihaan-logo.png",
+    path: logoPath,
+    cid: "vihaan-logo"   // referenced as cid:vihaan-logo in HTML
+  }] : [];
+
   const mailOptions = {
     from: `"${senderName}" <${EMAIL_USER}>`,
     to: recipientEmail,
     subject: subject,
     text: message,
-    html: getEmailHTML(message, senderName, logoUrl),
-    attachments: attachments
+    html: getEmailHTML(message, senderName, hasLogo ? "cid:vihaan-logo" : null),
+    attachments: [...inlineAttachments, ...attachments]
   };
 
   try {
