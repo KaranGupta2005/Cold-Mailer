@@ -80,7 +80,7 @@ function parseEmailList(emailText) {
 }
 
 // Generate HTML email template
-function getEmailHTML(messageContent, senderName) {
+function getEmailHTML(messageContent, senderName, logoUrl) {
   // Convert markdown-style links [text](url) to HTML links
   let htmlContent = messageContent.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" style="color: #0066cc; text-decoration: none; font-weight: 500;">$1</a>');
   
@@ -90,36 +90,26 @@ function getEmailHTML(messageContent, senderName) {
   // Convert *italic* to <em>
   htmlContent = htmlContent.replace(/\*([^*]+)\*/g, '<em>$1</em>');
   
-  // Split into sections
   const sections = htmlContent.split('\n\n');
-  
   let formattedContent = '';
   
   sections.forEach(section => {
     const trimmedSection = section.trim();
-    
     if (!trimmedSection) return;
     
-    // Check if it's a table (contains | characters in multiple lines)
     const lines = trimmedSection.split('\n');
     if (lines.length > 2 && lines[0].includes('|') && lines[1].includes('|')) {
-      // It's a table
       formattedContent += '<table style="width: 100%; border-collapse: collapse; margin: 20px 0; background: white; border: 1px solid #ddd;">';
-      
       lines.forEach((line, index) => {
-        if (line.includes('---')) return; // Skip separator line
-        
+        if (line.includes('---')) return;
         const cells = line.split('|').map(cell => cell.trim()).filter(cell => cell);
-        
         if (index === 0) {
-          // Header row
           formattedContent += '<tr style="background-color: #0066cc; color: white;">';
           cells.forEach(cell => {
             formattedContent += `<th style="padding: 14px 16px; text-align: left; border: 1px solid #0066cc; font-weight: 600; font-size: 14px;">${cell}</th>`;
           });
           formattedContent += '</tr>';
         } else {
-          // Data row
           formattedContent += '<tr style="background-color: ' + (index % 2 === 0 ? '#f9f9f9' : 'white') + ';">';
           cells.forEach(cell => {
             formattedContent += `<td style="padding: 12px 16px; border: 1px solid #e0e0e0; color: #555; font-size: 14px; line-height: 1.6;">${cell}</td>`;
@@ -127,138 +117,57 @@ function getEmailHTML(messageContent, senderName) {
           formattedContent += '</tr>';
         }
       });
-      
       formattedContent += '</table>';
     } else if (trimmedSection.match(/^\d+\./)) {
-      // Numbered heading
       formattedContent += `<h3 style="color: #0066cc; margin: 25px 0 15px 0; font-size: 18px; font-weight: 700;">${trimmedSection}</h3>`;
     } else if (trimmedSection.endsWith(':') && trimmedSection.length < 100) {
-      // Section heading
       formattedContent += `<h4 style="color: #333; margin: 20px 0 10px 0; font-size: 16px; font-weight: 600;">${trimmedSection}</h4>`;
     } else {
-      // Regular paragraph - preserve line breaks
       const paragraphLines = trimmedSection.split('\n').map(line => line.trim()).join('<br>');
       formattedContent += `<p style="margin: 0 0 15px 0; color: #555; line-height: 1.8; font-size: 14px;">${paragraphLines}</p>`;
     }
   });
-  
+
+  // Build header: logo image if provided, else colored bar with sender name
+  const headerHTML = logoUrl
+    ? `<div style="background-color: #f9a800; text-align: center; padding: 0;">
+        <img src="${logoUrl}" alt="${senderName}" style="width: 100%; max-width: 700px; display: block; margin: 0 auto;" />
+       </div>`
+    : `<div style="background-color: #0066cc; color: white; padding: 30px 25px; text-align: center;">
+        <h2 style="margin: 0; font-size: 22px; font-weight: 700; letter-spacing: 0.5px;">${senderName}</h2>
+       </div>`;
+
   return `<!DOCTYPE html>
 <html>
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
-    body { 
-      font-family: Arial, 'Helvetica Neue', Helvetica, sans-serif; 
-      line-height: 1.6; 
-      color: #333; 
-      margin: 0;
-      padding: 0;
-      background-color: #f4f4f4;
-    }
-    .container { 
-      max-width: 700px; 
-      margin: 20px auto; 
-      background-color: white;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-    }
-    .header { 
-      background-color: #0066cc; 
-      color: white; 
-      padding: 30px 25px; 
-      text-align: center; 
-    }
-    .header h2 {
-      margin: 0;
-      font-size: 22px;
-      font-weight: 700;
-      letter-spacing: 0.5px;
-    }
-    .content { 
-      padding: 30px 25px; 
-      background-color: #ffffff; 
-    }
-    .content p {
-      margin: 0 0 15px 0;
-      color: #555;
-      line-height: 1.8;
-      font-size: 14px;
-    }
-    .content a {
-      color: #0066cc;
-      text-decoration: none;
-      font-weight: 500;
-    }
-    .content a:hover {
-      text-decoration: underline;
-    }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin: 20px 0;
-      background: white;
-      border: 1px solid #ddd;
-    }
-    th {
-      background-color: #0066cc;
-      color: white;
-      padding: 14px 16px;
-      text-align: left;
-      border: 1px solid #0066cc;
-      font-weight: 600;
-      font-size: 14px;
-    }
-    td {
-      padding: 12px 16px;
-      border: 1px solid #e0e0e0;
-      color: #555;
-      font-size: 14px;
-      line-height: 1.6;
-    }
-    tr:nth-child(even) {
-      background-color: #f9f9f9;
-    }
-    tr:hover {
-      background-color: #f0f7ff;
-    }
-    h3 {
-      color: #0066cc;
-      margin: 25px 0 15px 0;
-      font-size: 18px;
-      font-weight: 700;
-    }
-    h4 {
-      color: #333;
-      margin: 20px 0 10px 0;
-      font-size: 16px;
-      font-weight: 600;
-    }
-    strong {
-      color: #333;
-      font-weight: 700;
-    }
+    body { font-family: Arial, 'Helvetica Neue', Helvetica, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; background-color: #f4f4f4; }
+    .container { max-width: 700px; margin: 20px auto; background-color: white; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+    .content { padding: 30px 25px; background-color: #ffffff; }
+    .content p { margin: 0 0 15px 0; color: #555; line-height: 1.8; font-size: 14px; }
+    .content a { color: #0066cc; text-decoration: none; font-weight: 500; }
+    .content a:hover { text-decoration: underline; }
+    table { width: 100%; border-collapse: collapse; margin: 20px 0; background: white; border: 1px solid #ddd; }
+    th { background-color: #0066cc; color: white; padding: 14px 16px; text-align: left; border: 1px solid #0066cc; font-weight: 600; font-size: 14px; }
+    td { padding: 12px 16px; border: 1px solid #e0e0e0; color: #555; font-size: 14px; line-height: 1.6; }
+    tr:nth-child(even) { background-color: #f9f9f9; }
+    tr:hover { background-color: #f0f7ff; }
+    h3 { color: #0066cc; margin: 25px 0 15px 0; font-size: 18px; font-weight: 700; }
+    h4 { color: #333; margin: 20px 0 10px 0; font-size: 16px; font-weight: 600; }
+    strong { color: #333; font-weight: 700; }
     @media only screen and (max-width: 600px) {
-      .container {
-        width: 100% !important;
-        margin: 0 !important;
-      }
-      .content {
-        padding: 20px 15px !important;
-      }
-      table {
-        font-size: 12px;
-      }
-      th, td {
-        padding: 10px 8px !important;
-      }
+      .container { width: 100% !important; margin: 0 !important; }
+      .content { padding: 20px 15px !important; }
+      table { font-size: 12px; }
+      th, td { padding: 10px 8px !important; }
     }
   </style>
 </head>
 <body>
   <div class="container">
-    <div class="header">
-      <h2>${senderName}</h2>
-    </div>
+    ${headerHTML}
     <div class="content">
       ${formattedContent}
     </div>
@@ -268,13 +177,13 @@ function getEmailHTML(messageContent, senderName) {
 }
 
 // Send single email
-async function sendEmail(transporter, recipientEmail, subject, message, senderName, attachments) {
+async function sendEmail(transporter, recipientEmail, subject, message, senderName, attachments, logoUrl) {
   const mailOptions = {
     from: `"${senderName}" <${EMAIL_USER}>`,
     to: recipientEmail,
     subject: subject,
     text: message,
-    html: getEmailHTML(message, senderName),
+    html: getEmailHTML(message, senderName, logoUrl),
     attachments: attachments
   };
 
@@ -312,7 +221,8 @@ app.post("/api/send-emails", async (req, res) => {
     batchSize, 
     batchDelay, 
     emailDelay,
-    attachmentPaths 
+    attachmentPaths,
+    logoUrl
   } = req.body;
 
   console.log('\n📧 New campaign request received');
@@ -380,7 +290,8 @@ app.post("/api/send-emails", async (req, res) => {
             subject, 
             message, 
             senderName,
-            attachments
+            attachments,
+            logoUrl
           );
 
           if (result.success) {

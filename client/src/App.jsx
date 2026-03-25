@@ -7,6 +7,7 @@ function App() {
     subject: '',
     message: '',
     emailList: '',
+    logoUrl: '',
     batchSize: 50,
     batchDelay: 120000,
     emailDelay: 1000
@@ -120,6 +121,7 @@ function App() {
             subject: '',
             message: '',
             emailList: '',
+            logoUrl: '',
             batchSize: 50,
             batchDelay: 120000,
             emailDelay: 1000
@@ -179,6 +181,18 @@ function App() {
                   required
                 />
               </div>
+            </div>
+
+            <div className="form-group">
+              <label>Header Logo URL <span style={{color:'#718096', fontWeight:400}}>(optional — replaces the blue header with your image)</span></label>
+              <input
+                type="url"
+                name="logoUrl"
+                value={formData.logoUrl}
+                onChange={handleChange}
+                placeholder="https://example.com/your-logo.png"
+              />
+              <small>Upload your image to <a href="https://imgur.com/upload" target="_blank" rel="noreferrer">imgur.com</a> or <a href="https://postimages.org" target="_blank" rel="noreferrer">postimages.org</a> and paste the direct image URL here</small>
             </div>
 
             <div className="form-group">
