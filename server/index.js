@@ -80,7 +80,7 @@ function parseEmailList(emailText) {
 }
 
 // Generate HTML email template
-function getEmailHTML(messageContent, senderName, logoUrl) {
+function getEmailHTML(messageContent, senderName, logoUrl, footer, dtuLogoCid) {
   // Convert markdown-style links [text](url) to HTML links
   let htmlContent = messageContent.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" style="color: #0066cc; text-decoration: none; font-weight: 500;">$1</a>');
   
@@ -137,6 +137,34 @@ function getEmailHTML(messageContent, senderName, logoUrl) {
         <h2 style="margin: 0; font-size: 22px; font-weight: 700; letter-spacing: 0.5px;">${senderName}</h2>
        </div>`;
 
+  // Build footer HTML
+  let footerHTML = '';
+  if (footer && (footer.name || footer.title || footer.mobile || footer.email)) {
+    const dtuImg = dtuLogoCid
+      ? `<img src="${dtuLogoCid}" alt="DTU" style="width: 160px; height: auto; display: block;" />`
+      : '';
+
+    footerHTML = `
+    <div style="border-top: 2px solid #e2e8f0; margin-top: 30px; padding: 20px 25px;">
+      <table style="width: 100%; border: none; border-collapse: collapse; margin: 0;">
+        <tr>
+          <td style="width: 180px; vertical-align: middle; padding: 0 20px 0 0; border: none; text-align: center;">
+            ${dtuImg}
+          </td>
+          <td style="vertical-align: middle; border-left: 2px solid #e2e8f0; padding-left: 20px; border-top: none; border-right: none; border-bottom: none;">
+            <div style="font-size: 15px; font-weight: 700; color: #1a202c; margin-bottom: 3px;">${footer.name || ''}</div>
+            <div style="font-size: 13px; font-weight: 600; color: #333; margin-bottom: 2px;">${footer.title || ''}</div>
+            <div style="font-size: 12px; color: #718096; margin-bottom: 2px;">${footer.batch || ''}</div>
+            <div style="font-size: 12px; color: #718096; margin-bottom: 8px;">${footer.university || ''}</div>
+            ${footer.mobile ? `<div style="font-size: 13px; color: #333; margin-bottom: 3px;"><strong>Mobile:</strong> <a href="tel:${footer.mobile}" style="color: #0066cc; text-decoration: none;">${footer.mobile}</a></div>` : ''}
+            ${footer.email ? `<div style="font-size: 13px; color: #333; margin-bottom: 10px;"><strong>Email:</strong> <a href="mailto:${footer.email}" style="color: #0066cc; text-decoration: none;">${footer.email}</a></div>` : ''}
+            ${footer.linkedin ? `<a href="${footer.linkedin}" style="display: inline-block; width: 28px; height: 28px; background-color: #0077b5; border-radius: 50%; text-align: center; line-height: 28px; color: white; font-size: 14px; font-weight: 700; text-decoration: none;">in</a>` : ''}
+          </td>
+        </tr>
+      </table>
+    </div>`;
+  }
+
   return `<!DOCTYPE html>
 <html>
 <head>
@@ -171,29 +199,33 @@ function getEmailHTML(messageContent, senderName, logoUrl) {
     <div class="content">
       ${formattedContent}
     </div>
+    ${footerHTML}
   </div>
 </body>
 </html>`;
 }
 
 // Send single email
-async function sendEmail(transporter, recipientEmail, subject, message, senderName, attachments, logoUrl) {
+async function sendEmail(transporter, recipientEmail, subject, message, senderName, attachments, logoUrl, footer) {
 
-  // Check if a header image was uploaded (first attachment marked as header)
+  // Inline header image
   let inlineAttachments = [];
   let headerCid = null;
 
   if (logoUrl && logoUrl.startsWith('/uploads/')) {
     const logoPath = path.join(__dirname, logoUrl.replace('/uploads/', 'uploads/'));
     if (fs.existsSync(logoPath)) {
-      const ext = path.extname(logoPath).replace('.', '');
-      inlineAttachments = [{
-        filename: path.basename(logoPath),
-        path: logoPath,
-        cid: "header-image"
-      }];
+      inlineAttachments.push({ filename: path.basename(logoPath), path: logoPath, cid: "header-image" });
       headerCid = "cid:header-image";
     }
+  }
+
+  // Inline DTU footer logo
+  const dtuLogoPath = path.join(__dirname, "uploads", "dtu-logo.png");
+  let dtuLogoCid = null;
+  if (fs.existsSync(dtuLogoPath)) {
+    inlineAttachments.push({ filename: "dtu-logo.png", path: dtuLogoPath, cid: "dtu-logo" });
+    dtuLogoCid = "cid:dtu-logo";
   }
 
   const mailOptions = {
@@ -201,7 +233,7 @@ async function sendEmail(transporter, recipientEmail, subject, message, senderNa
     to: recipientEmail,
     subject: subject,
     text: message,
-    html: getEmailHTML(message, senderName, headerCid || logoUrl || null),
+    html: getEmailHTML(message, senderName, headerCid || logoUrl || null, footer, dtuLogoCid),
     attachments: [...inlineAttachments, ...attachments]
   };
 
@@ -255,7 +287,8 @@ app.post("/api/send-emails", async (req, res) => {
     batchDelay, 
     emailDelay,
     attachmentPaths,
-    logoUrl
+    logoUrl,
+    footer
   } = req.body;
 
   console.log('\n📧 New campaign request received');
@@ -324,7 +357,8 @@ app.post("/api/send-emails", async (req, res) => {
             message, 
             senderName,
             attachments,
-            logoUrl
+            logoUrl,
+            footer
           );
 
           if (result.success) {

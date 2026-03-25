@@ -14,9 +14,10 @@ client/dist/
 dist/
 build/
 
-# Uploads (keep logo, ignore user uploads)
+# Uploads (keep logos, ignore user uploads)
 server/uploads/*
 !server/uploads/vihaan-logo.png
+!server/uploads/dtu-logo.png
 
 # Logs
 *.log
