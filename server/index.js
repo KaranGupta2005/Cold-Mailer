@@ -84,19 +84,27 @@ function noHeaderFooter(footer, dtuLogoCid) {
   if (!footer || (!footer.name && !footer.title && !footer.mobile && !footer.email)) return '';
 
   const dtuImg = dtuLogoCid
-    ? `<img src="${dtuLogoCid}" alt="DTU" style="width: 130px; height: auto; display: block; margin-bottom: 8px;" />`
+    ? `<img src="${dtuLogoCid}" alt="DTU" style="width: 130px; height: auto; display: block;" />`
     : '';
 
   return `
-  <div style="margin-top: 25px; padding-top: 15px; border-top: 1px solid #e2e8f0; text-align: left; font-family: Arial, sans-serif;">
-    ${dtuImg}
-    <div style="font-size: 14px; font-weight: 700; color: #1a202c; margin-bottom: 2px;">${footer.name || ''}</div>
-    <div style="font-size: 13px; color: #555; margin-bottom: 1px;">${footer.title || ''}</div>
-    <div style="font-size: 12px; color: #888; margin-bottom: 1px;">${footer.batch || ''}</div>
-    <div style="font-size: 12px; color: #888; margin-bottom: 6px;">${footer.university || ''}</div>
-    ${footer.mobile ? `<div style="font-size: 13px; color: #333; margin-bottom: 2px;"><strong>Mobile:</strong> <a href="tel:${footer.mobile}" style="color: #0066cc; text-decoration: none;">${footer.mobile}</a></div>` : ''}
-    ${footer.email ? `<div style="font-size: 13px; color: #333; margin-bottom: 8px;"><strong>Email:</strong> <a href="mailto:${footer.email}" style="color: #0066cc; text-decoration: none;">${footer.email}</a></div>` : ''}
-    ${footer.linkedin ? `<a href="${footer.linkedin}" style="display: inline-block; width: 26px; height: 26px; background-color: #0077b5; border-radius: 50%; text-align: center; line-height: 26px; color: white; font-size: 13px; font-weight: 700; text-decoration: none;">in</a>` : ''}
+  <div style="margin-top: 25px; font-family: Arial, sans-serif;">
+    <table style="border: none !important; border-collapse: collapse; margin: 0; width: auto;">
+      <tr>
+        <td style="border: none !important; padding: 0 20px 0 0; vertical-align: middle;">
+          ${dtuImg}
+        </td>
+        <td style="border: none !important; border-left: 2px solid #e2e8f0 !important; padding: 0 0 0 20px; vertical-align: middle;">
+          <div style="font-size: 14px; font-weight: 700; color: #1a202c; margin-bottom: 2px;">${footer.name || ''}</div>
+          <div style="font-size: 13px; color: #555; margin-bottom: 1px;">${footer.title || ''}</div>
+          <div style="font-size: 12px; color: #888; margin-bottom: 1px;">${footer.batch || ''}</div>
+          <div style="font-size: 12px; color: #888; margin-bottom: 6px;">${footer.university || ''}</div>
+          ${footer.mobile ? `<div style="font-size: 13px; color: #333; margin-bottom: 2px;"><strong>Mobile:</strong> <a href="tel:${footer.mobile}" style="color: #0066cc; text-decoration: none;">${footer.mobile}</a></div>` : ''}
+          ${footer.email ? `<div style="font-size: 13px; color: #333; margin-bottom: 8px;"><strong>Email:</strong> <a href="mailto:${footer.email}" style="color: #0066cc; text-decoration: none;">${footer.email}</a></div>` : ''}
+          ${footer.linkedin ? `<a href="${footer.linkedin}" style="display: inline-block; width: 26px; height: 26px; background-color: #0077b5; border-radius: 50%; text-align: center; line-height: 26px; color: white; font-size: 13px; font-weight: 700; text-decoration: none;">in</a>` : ''}
+        </td>
+      </tr>
+    </table>
   </div>`;
 }
 
