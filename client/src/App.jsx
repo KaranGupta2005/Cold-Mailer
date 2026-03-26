@@ -10,7 +10,7 @@ function App() {
     logoUrl: '',
     noHeader: false,
     batchSize: 20,
-    batchDelay: 300000,
+    batchDelay: 180000,
     emailDelay: 3000
   });
 
@@ -142,7 +142,7 @@ function App() {
           message: `Campaign started successfully! Sending to ${data.totalEmails} recipients. Check server console for progress.`
         });
         setTimeout(() => {
-          setFormData({ senderName: '', subject: '', message: '', emailList: '', logoUrl: '', noHeader: false, batchSize: 20, batchDelay: 300000, emailDelay: 3000 });
+          setFormData({ senderName: '', subject: '', message: '', emailList: '', logoUrl: '', noHeader: false, batchSize: 20, batchDelay: 180000, emailDelay: 3000 });
           setAttachments([]);
           setHeaderImage(null);
           setHeaderPreview(null);
