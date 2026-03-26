@@ -382,7 +382,8 @@ app.post("/api/send-emails", async (req, res) => {
     emailDelay,
     attachmentPaths,
     logoUrl,
-    footer
+    footer,
+    sendingAccount
   } = req.body;
 
   const noHeader = req.body.noHeader === true || req.body.noHeader === 'true';
@@ -439,9 +440,27 @@ app.post("/api/send-emails", async (req, res) => {
     (async () => {
       console.log(`\n📧 Starting campaign: ${emails.length} emails`);
 
-      const accounts = createTransporters();
+      const allAccounts = createTransporters();
+
+      // Filter accounts based on user selection
+      let accounts;
+      if (sendingAccount === 'account2') {
+        accounts = allAccounts.length > 1 ? allAccounts.slice(1, 2) : allAccounts.slice(0, 1);
+      } else if (sendingAccount === 'both') {
+        accounts = allAccounts;
+      } else {
+        accounts = allAccounts.slice(0, 1); // default: account1
+      }
+
+      if (accounts.length === 0) {
+        console.error('❌ No valid accounts found');
+        return;
+      }
+
+      console.log(`📧 Using: ${accounts.map(a => a.email).join(' + ')}`);
+
       let accountIndex = 0;
-      const ROTATE_EVERY = 40; // rotate account every N emails
+      const ROTATE_EVERY = 40;
 
       for (let i = 0; i < emails.length; i += batchSize) {
         const batch = emails.slice(i, i + batchSize);

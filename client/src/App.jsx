@@ -9,6 +9,7 @@ function App() {
     emailList: '',
     logoUrl: '',
     noHeader: false,
+    sendingAccount: 'account1',
     batchSize: 20,
     batchDelay: 180000,
     emailDelay: 3000
@@ -130,7 +131,7 @@ function App() {
       if (data.success) {
         setStatus({ type: 'success', message: `Campaign started — sending to ${data.totalEmails} recipients.` });
         setTimeout(() => {
-          setFormData({ senderName: '', subject: '', message: '', emailList: '', logoUrl: '', noHeader: false, batchSize: 20, batchDelay: 180000, emailDelay: 3000 });
+          setFormData({ senderName: '', subject: '', message: '', emailList: '', logoUrl: '', noHeader: false, sendingAccount: 'account1', batchSize: 20, batchDelay: 180000, emailDelay: 3000 });
           setAttachments([]);
           setHeaderImage(null);
           setHeaderPreview(null);
@@ -174,6 +175,34 @@ function App() {
               <div className="form-group">
                 <label>Subject <span className="required">*</span></label>
                 <input type="text" name="subject" value={formData.subject} onChange={handleChange} placeholder="Email subject line" required />
+              </div>
+            </div>
+
+            {/* Sending Account */}
+            <div className="form-group">
+              <label>Sending Account <span className="required">*</span></label>
+              <div className="account-selector">
+                <label className={`account-option ${formData.sendingAccount === 'account1' ? 'selected' : ''}`}>
+                  <input type="radio" name="sendingAccount" value="account1" checked={formData.sendingAccount === 'account1'} onChange={handleChange} />
+                  <div className="account-info">
+                    <span className="account-email">ieeedtucs123@gmail.com</span>
+                    <span className="account-label">Primary</span>
+                  </div>
+                </label>
+                <label className={`account-option ${formData.sendingAccount === 'account2' ? 'selected' : ''}`}>
+                  <input type="radio" name="sendingAccount" value="account2" checked={formData.sendingAccount === 'account2'} onChange={handleChange} />
+                  <div className="account-info">
+                    <span className="account-email">ieee.dce.corporate@gmail.com</span>
+                    <span className="account-label">Secondary</span>
+                  </div>
+                </label>
+                <label className={`account-option ${formData.sendingAccount === 'both' ? 'selected' : ''}`}>
+                  <input type="radio" name="sendingAccount" value="both" checked={formData.sendingAccount === 'both'} onChange={handleChange} />
+                  <div className="account-info">
+                    <span className="account-email">Both accounts</span>
+                    <span className="account-label">Rotate every 40 emails</span>
+                  </div>
+                </label>
               </div>
             </div>
 
