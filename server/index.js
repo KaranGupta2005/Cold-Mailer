@@ -44,20 +44,48 @@ const upload = multer({
   limits: { fileSize: 25 * 1024 * 1024 } // 25MB limit
 });
 
-// Create email transporter
+// Create rotating transporters from all available accounts
+function createTransporters() {
+  const accounts = [];
+
+  const pairs = [
+    { user: process.env.EMAIL_USER, pass: process.env.EMAIL_PASS },
+    { user: process.env.EMAIL_USER_2, pass: process.env.EMAIL_PASS_2 },
+    { user: process.env.EMAIL_USER_3, pass: process.env.EMAIL_PASS_3 },
+  ];
+
+  for (const pair of pairs) {
+    if (pair.user && pair.pass) {
+      accounts.push({
+        email: pair.user,
+        transporter: nodemailer.createTransport({
+          host: "smtp.gmail.com",
+          port: 587,
+          secure: false,
+          auth: { user: pair.user, pass: pair.pass },
+          tls: { rejectUnauthorized: false },
+          family: 4
+        }),
+        sent: 0
+      });
+    }
+  }
+
+  console.log(`📧 Loaded ${accounts.length} email account(s)`);
+  return accounts;
+}
+
+// Create email transporter (single, for verify)
 function createTransporter() {
   return nodemailer.createTransport({
     host: "smtp.gmail.com",
     port: 587,
-    secure: false, // Use STARTTLS
+    secure: false,
     auth: {
       user: EMAIL_USER,
       pass: EMAIL_PASS,
     },
-    tls: {
-      rejectUnauthorized: false
-    },
-    // Force IPv4
+    tls: { rejectUnauthorized: false },
     family: 4
   });
 }
@@ -405,17 +433,29 @@ app.post("/api/send-emails", async (req, res) => {
     // Send emails in background
     (async () => {
       console.log(`\n📧 Starting campaign: ${emails.length} emails`);
-      
+
+      const accounts = createTransporters();
+      let accountIndex = 0;
+      const ROTATE_EVERY = 40; // rotate account every N emails
+
       for (let i = 0; i < emails.length; i += batchSize) {
         const batch = emails.slice(i, i + batchSize);
         const batchNum = Math.floor(i / batchSize) + 1;
         const totalBatches = Math.ceil(emails.length / batchSize);
 
-        console.log(`\n📦 Batch ${batchNum}/${totalBatches} (${batch.length} emails)`);
+        console.log(`\n📦 Batch ${batchNum}/${totalBatches} (${batch.length} emails) — Account: ${accounts[accountIndex].email}`);
 
         for (const email of batch) {
+          // Rotate account every ROTATE_EVERY emails
+          if (accounts.length > 1 && results.sent > 0 && results.sent % ROTATE_EVERY === 0) {
+            accountIndex = (accountIndex + 1) % accounts.length;
+            console.log(`🔄 Rotating to account: ${accounts[accountIndex].email}`);
+          }
+
+          const currentAccount = accounts[accountIndex];
+
           const result = await sendEmail(
-            transporter, 
+            currentAccount.transporter,
             email, 
             subject, 
             message, 
@@ -428,7 +468,8 @@ app.post("/api/send-emails", async (req, res) => {
 
           if (result.success) {
             results.sent++;
-            console.log(`  ✅ ${email} (${results.sent}/${emails.length})`);
+            currentAccount.sent++;
+            console.log(`  ✅ ${email} (${results.sent}/${emails.length}) via ${currentAccount.email}`);
           } else {
             results.failed++;
             results.failedEmails.push({ email, error: result.error });
@@ -449,7 +490,8 @@ app.post("/api/send-emails", async (req, res) => {
       console.log("\n✅ Campaign completed!");
       console.log(`   Sent: ${results.sent}/${results.total}`);
       console.log(`   Failed: ${results.failed}/${results.total}`);
-      
+      accounts.forEach(a => console.log(`   ${a.email}: ${a.sent} sent`));
+
       if (results.failedEmails.length > 0) {
         console.log("\n❌ Failed emails:");
         results.failedEmails.forEach(({ email, error }) => {

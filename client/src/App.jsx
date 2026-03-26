@@ -9,9 +9,9 @@ function App() {
     emailList: '',
     logoUrl: '',
     noHeader: false,
-    batchSize: 50,
-    batchDelay: 120000,
-    emailDelay: 1000
+    batchSize: 20,
+    batchDelay: 300000,
+    emailDelay: 3000
   });
 
   const [footer, setFooter] = useState({
@@ -142,7 +142,7 @@ function App() {
           message: `Campaign started successfully! Sending to ${data.totalEmails} recipients. Check server console for progress.`
         });
         setTimeout(() => {
-          setFormData({ senderName: '', subject: '', message: '', emailList: '', logoUrl: '', batchSize: 50, batchDelay: 120000, emailDelay: 1000 });
+          setFormData({ senderName: '', subject: '', message: '', emailList: '', logoUrl: '', noHeader: false, batchSize: 20, batchDelay: 300000, emailDelay: 3000 });
           setAttachments([]);
           setHeaderImage(null);
           setHeaderPreview(null);
