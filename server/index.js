@@ -266,7 +266,12 @@ async function sendEmail(transporter, recipientEmail, subject, message, senderNa
   if (logoUrl && logoUrl.startsWith('/uploads/')) {
     const logoPath = path.join(__dirname, logoUrl.replace('/uploads/', 'uploads/'));
     if (fs.existsSync(logoPath)) {
-      inlineAttachments.push({ filename: path.basename(logoPath), path: logoPath, cid: "header-image" });
+      inlineAttachments.push({ 
+        filename: path.basename(logoPath), 
+        path: logoPath, 
+        cid: "header-image",
+        contentDisposition: 'inline'
+      });
       headerCid = "cid:header-image";
     }
   }
@@ -275,7 +280,12 @@ async function sendEmail(transporter, recipientEmail, subject, message, senderNa
   const dtuLogoPath = path.join(__dirname, "uploads", "dtu-logo.png");
   let dtuLogoCid = null;
   if (fs.existsSync(dtuLogoPath)) {
-    inlineAttachments.push({ filename: "dtu-logo.png", path: dtuLogoPath, cid: "dtu-logo" });
+    inlineAttachments.push({ 
+      filename: "dtu-logo.png", 
+      path: dtuLogoPath, 
+      cid: "dtu-logo",
+      contentDisposition: 'inline'
+    });
     dtuLogoCid = "cid:dtu-logo";
   }
 
