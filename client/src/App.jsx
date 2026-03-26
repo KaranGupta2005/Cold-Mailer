@@ -329,17 +329,17 @@ function App() {
               <div className="form-group">
                 <label>Batch Size</label>
                 <input type="number" name="batchSize" value={formData.batchSize} onChange={handleChange} min="1" max="100" />
-                <small>Emails per batch</small>
+                <small>Emails per batch (recommended: 20)</small>
               </div>
               <div className="form-group">
-                <label>Batch Delay (ms)</label>
+                <label>Batch Delay — {(formData.batchDelay / 60000).toFixed(1)} min</label>
                 <input type="number" name="batchDelay" value={formData.batchDelay} onChange={handleChange} min="0" step="1000" />
-                <small>Wait between batches</small>
+                <small>Wait between batches (ms) — randomized ±50%</small>
               </div>
               <div className="form-group">
-                <label>Email Delay (ms)</label>
+                <label>Email Delay — {(formData.emailDelay / 1000).toFixed(1)} sec</label>
                 <input type="number" name="emailDelay" value={formData.emailDelay} onChange={handleChange} min="0" step="100" />
-                <small>Wait between emails</small>
+                <small>Wait between emails (ms) — randomized ±50%</small>
               </div>
             </div>
           </div>
