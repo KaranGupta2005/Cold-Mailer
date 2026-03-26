@@ -334,8 +334,13 @@ async function sendEmail(transporter, recipientEmail, subject, message, senderNa
   }
 }
 
-// Delay helper
-const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+// Delay helper - randomized ±50% to appear human
+const delay = (ms) => {
+  const jitter = ms * 0.5;
+  const randomMs = ms + (Math.random() * jitter * 2) - jitter;
+  console.log(`   ⏱ Waiting ${(randomMs / 1000).toFixed(1)}s...`);
+  return new Promise(resolve => setTimeout(resolve, randomMs));
+};
 
 // API Routes
 app.post("/api/upload", upload.array("attachments", 10), (req, res) => {
