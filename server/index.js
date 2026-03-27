@@ -285,7 +285,7 @@ function getEmailHTML(messageContent, senderName, logoUrl, footer, dtuLogoCid, n
 }
 
 // Send single email
-async function sendEmail(transporter, recipientEmail, subject, message, senderName, attachments, logoUrl, footer, noHeader) {
+async function sendEmail(transporter, recipientEmail, subject, message, senderName, attachments, logoUrl, footer, noHeader, fromEmail) {
 
   // Inline header image
   let inlineAttachments = [];
@@ -318,12 +318,17 @@ async function sendEmail(transporter, recipientEmail, subject, message, senderNa
   }
 
   const mailOptions = {
-    from: `"${senderName}" <${EMAIL_USER}>`,
+    from: `"${senderName}" <${fromEmail || EMAIL_USER}>`,
     to: recipientEmail,
     subject: subject,
     text: message,
     html: getEmailHTML(message, senderName, headerCid || logoUrl || null, footer, dtuLogoCid, noHeader),
-    attachments: [...inlineAttachments, ...attachments]
+    attachments: [...inlineAttachments, ...attachments],
+    headers: {
+      'X-Mailer': 'Microsoft Outlook 16.0',
+      'X-Priority': '3',
+      'Importance': 'Normal'
+    }
   };
 
   try {
@@ -487,7 +492,8 @@ app.post("/api/send-emails", async (req, res) => {
             attachments,
             logoUrl,
             footer,
-            noHeader
+            noHeader,
+            currentAccount.email
           );
 
           if (result.success) {
